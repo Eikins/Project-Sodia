@@ -17,6 +17,8 @@ public class PlayerController : MonoBehaviour
     private bool facingRight;
     private bool isGrounded;
 
+    private bool canMove;
+
     private Animator animator;
     private new Rigidbody2D rigidbody;
 
@@ -27,6 +29,7 @@ public class PlayerController : MonoBehaviour
         animator = GetComponent<Animator>();
         rigidbody = GetComponent<Rigidbody2D>();
         groundCheck = transform.Find("GroundCheck");
+        canMove = true;
     }
 
     void Update() {
@@ -35,20 +38,22 @@ public class PlayerController : MonoBehaviour
         isGrounded = Physics2D.Linecast(transform.position, groundCheck.position, LayerMask.GetMask("Ground"));
         animator.SetBool("OnGround", isGrounded);
 
-        if(inputAttack) PerformAttack(); else if(inputJump && isGrounded) PerformJump();
+        if(inputAttack) PerformAttack(); else if(inputJump && isGrounded && canMove) PerformJump();
 
-        SetMoveSpeed(inputMovement * moveSpeed);
-
-        if(facingRight && inputMovement < -0.1f) {
-            Flip();
-        } else if(!facingRight && inputMovement > 0.1f) {
-            Flip();
+        if(canMove) {
+            SetMoveSpeed(inputMovement * moveSpeed);
+            if(facingRight && inputMovement < -0.1f) {
+                Flip();
+            } else if(!facingRight && inputMovement > 0.1f) {
+                Flip();
+            }
         }
+
     }
 
     void OnDrawGizmosSelected() {
         Gizmos.color = new Color(1, 1, 0, 0.75F);
-        Gizmos.DrawLine(transform.position, groundCheck.position);
+        Gizmos.DrawLine(transform.position, transform.Find("GroundCheck").position);
     }
 
     private void SetMoveSpeed(float velocity) {
@@ -63,8 +68,21 @@ public class PlayerController : MonoBehaviour
     }
 
     private void PerformAttack() {
-        // Hitbox check
+        SetCanMove(false);
         animator.SetTrigger("Attack");
+    }
+
+    private void OnAttackFinished() {
+        SetCanMove(true);
+    }
+
+    private void SetCanMove(bool value) {
+        if(value) {
+            canMove = true;
+        } else {
+            canMove = false;
+            SetMoveSpeed(0f);
+        }
     }
 
     private void PerformJump() {
