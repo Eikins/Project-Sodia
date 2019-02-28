@@ -16,6 +16,7 @@ public class PlayerController : MonoBehaviour
     
     private bool facingRight;
     private bool isGrounded;
+    private bool doubleJump;
 
     private Animator animator;
     private new Rigidbody2D rigidbody;
@@ -35,13 +36,19 @@ public class PlayerController : MonoBehaviour
         isGrounded = Physics2D.Linecast(transform.position, groundCheck.position, LayerMask.GetMask("Ground"));
         animator.SetBool("OnGround", isGrounded);
 
+        if(isGrounded) doubleJump = true;
+
         if(inputAttack) PerformAttack(); else if(inputJump && isGrounded) PerformJump();
+        else if(inputJump && doubleJump) {
+            PerformJump();
+            doubleJump = false;
+        }
 
         SetMoveSpeed(inputMovement * moveSpeed);
 
-        if(facingRight && inputMovement < -0.1f) {
+        if(facingRight && inputMovement < -0.1f && isGrounded) {
             Flip();
-        } else if(!facingRight && inputMovement > 0.1f) {
+        } else if(!facingRight && inputMovement > 0.1f && isGrounded) {
             Flip();
         }
     }
